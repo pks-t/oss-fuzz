@@ -24,6 +24,7 @@ fi
 
 LOGS_DIR="$OUT/logs"
 mkdir -p $LOGS_DIR
+REPORT_DIR="$OUT/report"
 
 # This will be used by llvm-cov command to generate the actual report.
 objects=""
@@ -38,7 +39,7 @@ function run_fuzz_target {
   local args="-timeout=100 -runs=0 /corpus/${target}"
 
   LLVM_PROFILE_FILE="$target.profraw" $target $args &> $LOGS_DIR/$target.log
-  if (( $? != 0)); then
+  if (( $? != 0 )); then
     echo "Error occured while running $target:"
     cat $LOGS_DIR/$target.log
   fi
@@ -70,10 +71,13 @@ rm *.profraw
 # TODO(mmoroz): add script from Chromium for rendering directory view reports.
 
 # Generate HTML report.
-llvm-cov show -format=html -output-dir=report -path-equivalence="/,$OUT" \
+llvm-cov show -format=html -output-dir=$REPORT_DIR -path-equivalence="/,$OUT" \
 		-instr-profile merged.profdata $objects
 
-# Serve the report locally.
-echo "Serving the report on http://127.0.0.1:$HTTP_PORT/"
-cd report
-python3 -m http.server $HTTP_PORT
+# Even though it is possible to serve at 0 port, use it to disable HTTP server.
+if (( $HTTP_PORT != 0 )); then
+  # Serve the report locally.
+  echo "Serving the report on http://127.0.0.1:$HTTP_PORT/"
+  cd $REPORT_DIR
+  python3 -m http.server $HTTP_PORT
+fi

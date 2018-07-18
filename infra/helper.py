@@ -132,6 +132,8 @@ def main():
                               'target to be run for generating coverage report')
   profile_parser.add_argument('--corpus-dir', help='specify location of corpus '
                               'to be used (requires --fuzz-target argument)')
+  profile_parser.add_argument('--extra-args', help='additional arguments to '
+                              'pass to llvm-cov utility.')
 
   reproduce_parser = subparsers.add_parser(
       'reproduce', help='Reproduce a crash.')
@@ -621,6 +623,7 @@ def profile(args):
       'PROJECT=%s' % args.project_name,
       'SANITIZER=profile',
       'HTTP_PORT=%s' % args.port,
+      'COVERAGE_EXTRA_ARGS=%s' % args.extra_args,
   ]
 
   run_args = _env_to_docker_args(env)
